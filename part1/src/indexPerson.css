@@ -1,0 +1,19 @@
+.notification {
+    color: green;
+    font-size: 20px;    
+    background-color: lightgray;   
+    border-style: solid; 
+    border-radius: 5px;    
+    padding: 10px;
+    margin-bottom: 20px;
+}
+.error {    
+    color: red;
+}
+.update {
+    color: rgb(51, 106, 139);
+}
+.delete {
+    color: orange;
+}
+
