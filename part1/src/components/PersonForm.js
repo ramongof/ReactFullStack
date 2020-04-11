@@ -37,18 +37,20 @@ const PersonForm = (props) => {
                     }, 5000)                  
                 })            
         }
-        else if(!nameTrim || (checkElement('name').includes(nameTrim))){     
+        else if(!nameTrim || (checkElement('name').includes(nameTrim))){              
             if(!numberTrim || checkElement('number').includes(numberTrim)){                 
                 let message = (checkElement('name').includes(nameTrim)) ? `${nameTrim} is already added to phonebook` : 'Insert a new name!'                
                 window.alert(`${message}`)  
             }
             else{
-                if(window.confirm(`${nameTrim} is already added to Phonebook, replace the old number with the new one?`)){
+                if(window.confirm(`${nameTrim} is already added to Phonebook, replace the old number with the new one?`)){                    
                     props.personService
-                        .update( props.persons.filter(e => (e.name === nameTrim)).map(e => e.id), nameObject)
-                        .then(returnedPersons => {                            
-                            setPersons(props.persons.filter(e => e.id !== returnedPersons.id).concat(returnedPersons))
-                            props.setNotificationMessage(`${returnedPersons.name} number was replaced`)
+                        .update(...props.persons.filter(e => (e.name === nameTrim)).map(e => e.id), nameObject)
+                        .then(returnedPerson => {  
+                            // console.log((props.persons, returnedPerson) => props.persons && props.persons.map(p => p.id === returnedPerson.id ? returnedPerson : t))                            
+                            returnedPerson.number = nameObject.number                                                  
+                            setPersons(props.persons.filter(e => e.id !== returnedPerson.id).concat(returnedPerson))
+                            props.setNotificationMessage(`${returnedPerson.name} number was replaced`)
                             props.setClassType('notification update')
                             setTimeout(() => {
                                 props.setNotificationMessage(null)

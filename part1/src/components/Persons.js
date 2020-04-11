@@ -1,8 +1,8 @@
 import React from 'react'
 
 const Persons= (props) => {
-    const setPersons = props.setPersons    
-    const handleDelete = (person) => {                
+    const setPersons = props.setPersons       
+    const handleDelete = (person) => {                        
         if(window.confirm(`are you sure you want to delete ${person.name}`)){
             props.personService
                 .deletePerson(person.id)     

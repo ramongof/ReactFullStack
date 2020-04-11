@@ -1,96 +1,124 @@
-console.log('hello world')
+require('dotenv').config({ path: '../.env' })
 
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
-
 const app = express()
+const Person = require('./models/person')
 
 morgan.token('type', (req, res) => req.headers['content-type'])
+morgan.token('id', (req, res) =>  req.params.id)
 morgan.token('body', (req, res) => JSON.stringify(req.body))
 
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :type :body :id'))
 app.use(cors())
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :type :body'))
-app.use(express.json())
 app.use(express.static('build'))
+app.use(express.json())
 
-let notes = [
-    {
-        id: 1,
-        content: "HTML is easy",
-        date: "2019-05-30T17:30.31.098Z",
-        important: true
-    },
-    {
-        id: 2,
-        content: "Browser can execute only Javascript",
-        date: "2019-05-30T18:39:34.091Z",
-        important: false
-    },
-    {
-        id: 3,
-        content: "GET and POST are the most important methods of HTTP protocol",
-        date: "2019-05-30T19:20:14.298Z",
-        important: true
-    }
-]
- 
-app.get('/', (request, response) => {
-    response.send('<h1>Hello World!</h1>')
+
+app.get('/', (request, response) => {    
+    response.send('<h1>Phone Book2</h1>')
 })
 
-app.get('/api/notes', (request, response) => {
-    response.json(notes)
+app.get('/info', (request, response) => {        
+    const date = new Date()
+    Person.find().then(persons => {
+        response.send(`<div>Phone Book2 has info for ${persons.length} people</div>
+    <div>${date.toUTCString()}</div>`)
+    })
 })
 
-app.get('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const note = notes.find(note => note.id === id)
-    if(note){
-        response.json(note)
+app.get('/api/persons', (request, response) => {   
+    Person.find({}).then(persons => {
+        response.json(persons.map(person => person.toJSON()))
+    })    
+})
+
+app.get('/api/persons/:id', (request, response, next) => {    
+    Person.findById(request.params.id)
+        .then(person => {
+            if (person) {
+                response.json(person.toJSON())
+            } else {
+                response.status(404).end()
+            }            
+        })
+        .catch(error => next(error))
+})
+
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndRemove(request.params.id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error => next(error))
+})
+
+app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body
+    const person = {
+        name: body.name,
+        number: body.number,
     }    
-    else{
-        response.status(404).end()
-    }
+    Person.findByIdAndUpdate(request.params.id, person)
+        .then(updatedPerson => {
+            response.json(updatedPerson.toJSON())
+        })
+        .catch(error => next(error))
 })
 
-app.delete('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id)
-    notes = notes.filter(note => note.id !== id)
+app.post('/api/persons', (request, response) => {
+    const body = request.body
+    // const eName = Person.find(p => p.name === body.name)
+    // const eNumber = Person.find(p => p.number === body.number)
+    
+    // if(!body.name || !body.number) {
+    //     return response.status(400).json({
+    //         error: 'content missing'
+    //     })
+    // }
+    // else if(eName){
+    //     return response.status(400).json({
+    //         error: 'This name was already registered'
+    //     })
+    // }
+    // else if(eNumber)
+    // {
+    //     return response.status(400).json({
+    //         error: 'This number was already registered'
+    //     })
+    // }
 
-    response.status(204).end()
+    const person = new Person({
+        name: body.name,
+        number: body.number,
+        date: new Date(),
+    })
+    
+    person.save().then(savedPerson => {
+        response.json(savedPerson.toJSON())
+    })
 })
 
-const generateId = () => {
-    const maxId = notes.length > 0
-        ? Math.max(...notes.map(n => n.id))
-        :0    
-    return maxId + 1
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
 }
 
-app.post('/api/notes', (request, response) => {
-    const body = request.body
+app.use(unknownEndpoint)
 
-    if(!body.content) {
-        return response.status(400).json({
-            error: 'content missing'
-        })
-    }
-
-    const note = {
-        content: body.content,
-        important: body.important || false,
-        date: new Date(),
-        id: generateId(),
-    }
+const errorHandler = (error, request, response, next) => {
+    console.error(error)
     
-    notes = notes.concat(note)
-    console.log(note)
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    }
 
-    response.json(note)
-})
+    next(error)
+}
 
-const PORT = process.env.PORT || 3001
+app.use(errorHandler)
+
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on  port ${PORT}`)
 })
