@@ -1,10 +1,10 @@
 const mongoose = require('mongoose')
-const password = require('./mongoPassword');
+const password = require('./mongoPassword')
 
 if( process.argv.length < 3 )
 {
-    console.log('give password as argument')
-    process.exit(1)
+  console.log('give password as argument')
+  process.exit(1)
 }
 
 const url = `mongodb+srv://admin:${password}@cluster0-ofv6k.mongodb.net/node-app?retryWrites=true&w=majority`
@@ -12,9 +12,9 @@ const url = `mongodb+srv://admin:${password}@cluster0-ofv6k.mongodb.net/node-app
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
 
 const noteSchema = new mongoose.Schema({
-    content: String,
-    date: Date,
-    important: Boolean,
+  content: String,
+  date: Date,
+  important: Boolean,
 })
 
 const Note = mongoose.model('Note', noteSchema)
@@ -33,10 +33,10 @@ const Note = mongoose.model('Note', noteSchema)
 
 // SELECT
 Note.find({}).then(result => {
-    result.forEach(note => {
-        console.log(note)
-    })
-    mongoose.connection.close()
+  result.forEach(note => {
+    console.log(note)
+  })
+  mongoose.connection.close()
 })
 
 // // SELECT IMPORTANT

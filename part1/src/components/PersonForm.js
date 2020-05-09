@@ -35,7 +35,16 @@ const PersonForm = (props) => {
                     setTimeout(() => {
                         props.setNotificationMessage(null)
                     }, 5000)                  
-                })            
+                })
+                .catch(error => {                                        
+                    props.setClassType('notification error')
+                    props.setNotificationMessage(error.response.data)
+                    setTimeout(() => {
+                        props.setNotificationMessage(null)
+                        props.setClassType('notification')
+                    }, 5000)  
+                })      
+                console.log('here')      
         }
         else if(!nameTrim || (checkElement('name').includes(nameTrim))){              
             if(!numberTrim || checkElement('number').includes(numberTrim)){                 
@@ -58,10 +67,12 @@ const PersonForm = (props) => {
                             }, 5000)     
                         })
                         .catch(error => {
+                            console.log(error)
+                            props.setClassType('notification error')
                             props.setNotificationMessage(
                                 `${nameTrim} was already deleted from Phonebook`
-                            )
-                            props.setClassType('notification error')
+                            )                
+                            setPersons(props.persons.filter(e => e.name !== nameTrim))                                        
                             setTimeout(() => {
                                 props.setNotificationMessage(null)
                                 props.setClassType('notification')
